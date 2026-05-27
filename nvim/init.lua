@@ -4,7 +4,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- =========================================================
 -- OPTIONS
@@ -29,13 +29,16 @@ vim.o.cursorline = true
 vim.o.scrolloff = 20
 vim.o.confirm = true
 vim.o.termguicolors = true
+vim.o.tabstop = 4
+vim.o.shiftwidth = 4
+vim.o.expandtab = true
 
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Sync clipboard after UI loads (avoids startup slowdown)
 vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
 
--- Disable vim lsp sig handler, blink does that
+-- Disable vim lsp sig handler (nvim-cmp handles signature help via cmp-nvim-lsp)
 vim.lsp.handlers['textDocument/signatureHelp'] = function() end
 
 -- =========================================================
@@ -118,9 +121,6 @@ rtp:prepend(lazypath)
 -- =========================================================
 
 require('lazy').setup({
-
-  -- Detect indentation automatically
-  { 'NMAC427/guess-indent.nvim', opts = {} },
 
   -- -------------------------------------------------------
   -- GIT
@@ -210,8 +210,6 @@ require('lazy').setup({
         { '<leader>f', group = 'Find (local)' },
         { '<leader>ff', desc = 'Find in buffer (lines)' },
         { '<leader>fb', desc = 'Buffers' },
-        { '<leader>fe', desc = 'Explore (Yazi)' },
-        { '<leader>fc', desc = 'Explore cwd (Yazi)' },
         { '<leader>fh', desc = 'Help tags' },
         { '<leader>fk', desc = 'Keymaps' },
 
@@ -267,6 +265,15 @@ require('lazy').setup({
         { '<leader>h3', desc = 'Jump to mark 3' },
         { '<leader>h4', desc = 'Jump to mark 4' },
 
+        -- m -> marks
+        { '<leader>m', group = 'Marks' },
+        { '<leader>ml', desc = 'List marks' },
+        { '<leader>mc', desc = 'Clear marks' },
+
+        -- t → toggles
+        { '<leader>t', group = 'Toggles' },
+        { '<leader>th', desc = 'Inlay hints' },
+
         -- x → diagnostics / trouble
         { '<leader>x', group = 'Diagnostics' },
         { '<leader>xx', desc = 'Workspace diagnostics' },
@@ -282,8 +289,6 @@ require('lazy').setup({
         { 'sr', desc = 'Replace surrounding' },
         { 'sf', desc = 'Find surrounding (forward)' },
         { 'sF', desc = 'Find surrounding (backward)' },
-        { 'sh', desc = 'Highlight surrounding' },
-        { 'sn', desc = 'Update n_lines' },
 
         -- w -> window management
         { '<leader>w', group = 'Windows' },
@@ -292,6 +297,13 @@ require('lazy').setup({
         { '<leader>wc', desc = 'Close split' },
         { '<leader>wo', desc = 'Close other splits' },
         { '<leader>we', desc = 'Equalise splits' },
+
+        -- Tab -> tab management
+        { '<leader><tab>', group = 'Tabs' },
+        { '<leader><tab>n', desc = 'New tab' },
+        { '<leader><tab>]', desc = 'Next tab' },
+        { '<leader><tab>[', desc = 'Prev tab' },
+        { '<leader><tab>c', desc = 'Close tab' },
 
         -- Surround (no leader — mini.surround uses bare s* binds)
         -- Listed here so which-key shows them when you press s in normal mode
@@ -328,18 +340,16 @@ require('lazy').setup({
           end
 
           -- Go-to actions (use built-in gr* defaults from Neovim 0.11+)
-          map('grn', vim.lsp.buf.rename, 'Rename symbol')
-          map('gra', vim.lsp.buf.code_action, 'Code action', { 'n', 'x' })
-          map('grD', vim.lsp.buf.declaration, 'Goto declaration')
+          map('<leader>cr', vim.lsp.buf.rename, 'Rename symbol')
+          map('<leader>ca', vim.lsp.buf.code_action, 'Code action', { 'n', 'x' })
+          map('<leader>cs', vim.lsp.buf.document_symbol, 'Document symbols')
+          map('<leader>cS', vim.lsp.buf.workspace_symbol, 'Workspace symbols')
+          map('gD', vim.lsp.buf.declaration, 'Goto declaration')
           map('gd', vim.lsp.buf.definition, 'Goto definition')
           map('gr', vim.lsp.buf.references, 'References')
           map('K', vim.lsp.buf.hover, 'Hover docs')
 
           -- Leader code binds (mirrors which-key spec above)
-          map('<leader>cr', vim.lsp.buf.rename, 'Rename symbol')
-          map('<leader>ca', vim.lsp.buf.code_action, 'Code action', { 'n', 'x' })
-          map('<leader>cs', vim.lsp.buf.document_symbol, 'Document symbols')
-          map('<leader>cS', vim.lsp.buf.workspace_symbol, 'Workspace symbols')
 
           -- Highlight references on cursor hold
           local client = vim.lsp.get_client_by_id(event.data.client_id)
@@ -455,10 +465,13 @@ require('lazy').setup({
   -- -------------------------------------------------------
 
   {
-    'saghen/blink.cmp',
-    event = 'VimEnter',
-    version = '1.*',
+    'hrsh7th/nvim-cmp',
+    event = 'InsertEnter',
     dependencies = {
+      -- Sources
+      'hrsh7th/cmp-nvim-lsp', -- LSP completions
+      'hrsh7th/cmp-path', -- filesystem paths
+      -- Snippets
       {
         'L3MON4D3/LuaSnip',
         version = '2.*',
@@ -466,36 +479,50 @@ require('lazy').setup({
           if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then return end
           return 'make install_jsregexp'
         end)(),
-        opts = {},
       },
+      'saadparwaiz1/cmp_luasnip', -- luasnip source for cmp
+      -- Supermaven: registers itself as a cmp source automatically
+      { 'supermaven-inc/supermaven-nvim', opts = {} },
     },
-    ---@module 'blink.cmp'
-    ---@type blink.cmp.Config
-    opts = {
-      keymap = {
-        preset = 'default',
-        ['<Tab>'] = { 'accept', 'fallback' },
-      },
-      appearance = { nerd_font_variant = 'mono' },
-      completion = {
-        -- Show menu immediately, no debounce
-        trigger = {
-          show_on_keyword = true,
-          show_on_insert_on_trigger_character = true,
+    config = function()
+      local cmp = require 'cmp'
+      local luasnip = require 'luasnip'
+
+      cmp.setup {
+        snippet = {
+          expand = function(args) luasnip.lsp_expand(args.body) end,
         },
-        list = {
-          -- First item pre-selected so <C-y> accepts immediately
-          selection = { preselect = true, auto_insert = false },
+        mapping = cmp.mapping.preset.insert {
+          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<C-y>'] = cmp.mapping.confirm { select = true },
+          ['<Tab>'] = cmp.mapping.confirm { select = true },
+          ['<C-d>'] = cmp.mapping.scroll_docs(4),
+          ['<C-u>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<C-e>'] = cmp.mapping.abort(),
         },
-        menu = { auto_show = true },
-        documentation = { auto_show = true, auto_show_delay_ms = 0 },
-        ghost_text = { enabled = true },
-      },
-      sources = { default = { 'lsp', 'path', 'snippets' } },
-      snippets = { preset = 'luasnip' },
-      fuzzy = { implementation = 'lua' },
-      signature = { enabled = true },
-    },
+        sources = cmp.config.sources {
+          { name = 'supermaven', priority = 100 }, -- AI suggestions first
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+          { name = 'path' },
+        },
+        window = {
+          completion = cmp.config.window.bordered { max_height = 5 },
+          documentation = cmp.config.window.bordered(),
+        },
+        formatting = {
+          format = function(entry, item)
+            item.menu = nil -- removes the [supermaven] / [LSP] label on the right
+            item.abbr = item.abbr:sub(1, 50) -- truncate long completions to one line
+            return item
+          end,
+        },
+        -- Show ghost text preview of selected item
+        experimental = { ghost_text = false },
+      }
+    end,
   },
 
   -- -------------------------------------------------------
@@ -541,12 +568,16 @@ require('lazy').setup({
   },
 
   -- -------------------------------------------------------
-  -- MINI.NVIM  (ai textobjects + surround + statusline)
+  -- MINI.NVIM  (icons + ai textobjects + surround + statusline)
   -- -------------------------------------------------------
 
   {
     'nvim-mini/mini.nvim',
     config = function()
+      -- Icons: mocks nvim-web-devicons so neo-tree/bufferline use mini.icons instead
+      require('mini.icons').setup {}
+      MiniIcons.mock_nvim_web_devicons()
+
       -- Textobjects: va), yiiq, ci' etc.
       require('mini.ai').setup {
         mappings = {
@@ -568,6 +599,15 @@ require('lazy').setup({
           highlight = 'sh', -- Highlight surrounding
           update_n_lines = 'sn', -- Update n_lines
         },
+      }
+
+      require('mini.pairs').setup {
+        modes = { insert = true, command = false, terminal = false },
+        -- don't pair in these contexts
+        skip_next = [=[[%w%%%'%[%"%.%`%$]]=],
+        skip_ts = { 'string' },
+        skip_unbalanced = true,
+        markdown = true,
       }
 
       -- Statusline
@@ -641,6 +681,7 @@ require('lazy').setup({
         },
       }
       vim.cmd 'colorscheme kanagawa-dragon'
+      vim.api.nvim_set_hl(0, 'Comment', { fg = '#7a8f7a', italic = false })
     end,
   },
 
@@ -684,6 +725,7 @@ require('lazy').setup({
             { section = 'projects' },
           },
         },
+
         keys = {
           { key = 'f', desc = 'Find files', action = function() require('snacks').picker.files() end },
           { key = 'g', desc = 'Live grep', action = function() require('snacks').picker.grep() end },
@@ -757,7 +799,6 @@ require('lazy').setup({
 
   {
     'akinsho/bufferline.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
 
     opts = {
 
@@ -771,33 +812,6 @@ require('lazy').setup({
   },
 
   -- -------------------------------------------------------
-  -- YAZI  (file manager) - maybe delete?
-  -- -------------------------------------------------------
-
-  -- {
-  --   'mikavilpas/yazi.nvim',
-  --   version = '*',
-  --   event = 'VeryLazy',
-  --   dependencies = { { 'nvim-lua/plenary.nvim', lazy = true } },
-  --   ---@type YaziConfig | {}
-  --   opts = {
-  --     open_for_directories = true, -- replaces netrw for directory opens
-  --     keymaps = {
-  --       show_help = '<f1>',
-  --       open_file_in_vertical_split = '<C-v>',
-  --       open_file_in_horizontal_split = '<C-x>',
-  --       open_file_in_tab = '<C-t>',
-  --       grep_in_directory = '<C-s>', -- snacks picker grep scoped to yazi's cwd
-  --       change_working_directory = '<C-\\>',
-  --     },
-  --   },
-  --   init = function()
-  --     -- prevent netrw loading since yazi is handling directories
-  --     vim.g.loaded_netrwPlugin = 1
-  --   end,
-  -- },
-
-  -- -------------------------------------------------------
   -- NEOTREE (quick file manager)
   -- -------------------------------------------------------
 
@@ -806,7 +820,6 @@ require('lazy').setup({
     branch = 'v3.x',
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
       'MunifTanjim/nui.nvim',
     },
     opts = {
@@ -817,14 +830,7 @@ require('lazy').setup({
       window = {
         width = 35,
         mappings = {
-          -- navigation
-          ['h'] = 'close_node',
-          ['l'] = 'open',
-          ['j'] = 'next_visible_node',
-          ['k'] = 'prev_visible_node',
-
-          -- open behaviour
-          ['<CR>'] = 'open', -- open and focus the file buffer
+          -- vim movement are default binds (enter also works)
           ['v'] = 'open_vsplit',
           ['x'] = 'open_split',
         },
@@ -938,7 +944,16 @@ vim.keymap.set('n', '<leader>gd', function()
     vim.cmd 'DiffviewOpen'
   end
 end, { desc = 'Diffview toggle' })
-vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<cr>', { desc = 'File history (current file)' })
+
+vim.keymap.set('n', '<leader>gh', function()
+  local lib = require 'diffview.lib'
+  local view = lib.get_current_view()
+  if view then
+    vim.cmd 'DiffviewClose'
+  else
+    vim.cmd 'DiffviewFileHistory %'
+  end
+end, { desc = 'File [H]istory (current file)' })
 -- Gitsigns binds are set buffer-locally in gitsigns on_attach above
 
 -- ── h → Harpoon ───────────────────────────────────────────
@@ -956,14 +971,27 @@ harpoon_map('<leader>h2', function() require('harpoon'):list():select(2) end, 'J
 harpoon_map('<leader>h3', function() require('harpoon'):list():select(3) end, 'Jump to mark 3')
 harpoon_map('<leader>h4', function() require('harpoon'):list():select(4) end, 'Jump to mark 4')
 
+-- ── m → Marks ───────────────────────────────────────────
+vim.keymap.set('n', '<leader>ml', '<cmd>marks<cr>', { desc = '[M]arks [L]ist' })
+vim.keymap.set('n', '<leader>mc', function()
+  vim.cmd 'delmarks!'
+end, { desc = '[M]arks [C]lear' })
+
 -- ── x → Diagnostics / Trouble ─────────────────────────────
 vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Workspace diagnostics' })
 vim.keymap.set('n', '<leader>xb', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', { desc = 'Buffer diagnostics' })
 vim.keymap.set('n', '<leader>xq', '<cmd>Trouble quickfix toggle<cr>', { desc = 'Quickfix list' })
 vim.keymap.set('n', '<leader>xd', function() snacks.picker.diagnostics() end, { desc = 'Diagnostics picker' })
+vim.keymap.set('n', '<leader>n', function() Snacks.scratch() end, { desc = 'Scratch buffer' })
 
 -- ── Disable tabline (bufferline handles this) ─────────────
 vim.opt.showtabline = 2
+
+-- ── Tab management ──────────────────────────────────────────
+vim.keymap.set('n', '<leader><tab>n', '<cmd>tabnew<cr>', { desc = 'New tab' })
+vim.keymap.set('n', '<leader><tab>]', '<cmd>tabnext<cr>', { desc = 'Next tab' })
+vim.keymap.set('n', '<leader><tab>[', '<cmd>tabprev<cr>', { desc = 'Prev tab' })
+vim.keymap.set('n', '<leader><tab>c', '<cmd>tabclose<cr>', { desc = 'Close tab' })
 
 -- Buffer cleanup
 vim.keymap.set('n', '<leader>ba', '<cmd>%bd<cr>', { desc = 'Close all buffers' })

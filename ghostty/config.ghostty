@@ -30,3 +30,6 @@ palette = 12=#97aedb
 palette = 13=#889ed1
 palette = 14=#8ccfc9
 palette = 15=#cfe7cf
+
+# copy current buffer to vim buffer
+keybind = ctrl+shift+y=write_screen_file:open

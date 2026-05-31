@@ -301,6 +301,7 @@ require('lazy').setup({
         -- Tab -> tab management
         { '<leader><tab>', group = 'Tabs' },
         { '<leader><tab>n', desc = 'New tab' },
+        { '<leader><tab>z', desc = 'Zoom window' },
         { '<leader><tab>]', desc = 'Next tab' },
         { '<leader><tab>[', desc = 'Prev tab' },
         { '<leader><tab>c', desc = 'Close tab' },
@@ -825,8 +826,12 @@ require('lazy').setup({
     opts = {
       filesystem = {
         hijack_netrw_behavior = 'open_current',
+        filtered_items = {
+          visible = true,
+          show_hidden_count = true,
+          hide_dotfiles = false,
+        },
       },
-      close_if_last_window = true,
       window = {
         width = 35,
         mappings = {
@@ -892,9 +897,6 @@ vim.keymap.set('n', '<leader>fc', function() snacks.picker.commands() end, { des
 vim.keymap.set('n', '<leader>fe', '<cmd>Oil<cr>', { desc = 'Explore (Oil)' })
 vim.keymap.set('n', '<leader>fh', function() snacks.picker.help() end, { desc = 'Help tags' })
 vim.keymap.set('n', '<leader>fk', function() snacks.picker.keymaps() end, { desc = 'Keymaps' })
-vim.keymap.set('n', '<leader>fe', '<cmd>Yazi<cr>', { desc = 'Explore (Yazi)' })
-vim.keymap.set('n', '<leader>fc', '<cmd>Yazi cwd<cr>', { desc = 'Explore cwd (Yazi)' })
-vim.keymap.set('n', '-', '<cmd>Yazi<cr>', { desc = 'Yazi: open at current file' })
 
 -- ── s → Search (project-wide) ─────────────────────────────
 vim.keymap.set('n', '<leader>sg', function() snacks.picker.grep() end, { desc = 'Live grep' })
@@ -973,9 +975,7 @@ harpoon_map('<leader>h4', function() require('harpoon'):list():select(4) end, 'J
 
 -- ── m → Marks ───────────────────────────────────────────
 vim.keymap.set('n', '<leader>ml', '<cmd>marks<cr>', { desc = '[M]arks [L]ist' })
-vim.keymap.set('n', '<leader>mc', function()
-  vim.cmd 'delmarks!'
-end, { desc = '[M]arks [C]lear' })
+vim.keymap.set('n', '<leader>mc', function() vim.cmd 'delmarks!' end, { desc = '[M]arks [C]lear' })
 
 -- ── x → Diagnostics / Trouble ─────────────────────────────
 vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Workspace diagnostics' })
@@ -989,6 +989,7 @@ vim.opt.showtabline = 2
 
 -- ── Tab management ──────────────────────────────────────────
 vim.keymap.set('n', '<leader><tab>n', '<cmd>tabnew<cr>', { desc = 'New tab' })
+vim.keymap.set('n', '<leader><tab>z', '<cmd>tab split<cr>', { desc = 'Zoom tab' })
 vim.keymap.set('n', '<leader><tab>]', '<cmd>tabnext<cr>', { desc = 'Next tab' })
 vim.keymap.set('n', '<leader><tab>[', '<cmd>tabprev<cr>', { desc = 'Prev tab' })
 vim.keymap.set('n', '<leader><tab>c', '<cmd>tabclose<cr>', { desc = 'Close tab' })

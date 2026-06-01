@@ -683,6 +683,12 @@ require('lazy').setup({
       }
       vim.cmd 'colorscheme kanagawa-dragon'
       vim.api.nvim_set_hl(0, 'Comment', { fg = '#7a8f7a', italic = false })
+
+      -- clear background
+      vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'FloatBorder', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'FloatTitle', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'NONE' })
     end,
   },
 

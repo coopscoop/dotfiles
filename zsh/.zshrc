@@ -1,30 +1,30 @@
-# default editor to nvim
+# ── Antigen ────────────────────────────────────────────────────────────────────
+source ~/dotfiles/zsh/plugins/antigen.zsh
+
+antigen bundle zsh-users/zsh-completions
+antigen bundle zsh-users/zsh-autosuggestions
+antigen bundle zsh-users/zsh-syntax-highlighting
+antigen apply
+
+# ── Environment ────────────────────────────────────────────────────────────────
 export EDITOR=nvim
-
-# alias
-alias ll="ls -la"
-alias devhobo="~/.local/bin/devhobo/start-dev"
-alias vim="nvim"
-
-# nvm init
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# ollama api
 export OLLAMA_API_BASE=http://localhost:11434
+export PATH="/home/coop/.opencode/bin:$PATH"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/home/coop/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/home/coop/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+# ── NVM ────────────────────────────────────────────────────────────────────────
+export NVM_DIR="$HOME/.nvm"
+[[ -s "$NVM_DIR/nvm.sh" ]]          && source "$NVM_DIR/nvm.sh"
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
 
-# The next line enables shell command completion for gcloud.
-if [ -f '/home/coop/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/home/coop/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+# ── Google Cloud SDK ───────────────────────────────────────────────────────────
+[[ -f '/home/coop/Downloads/google-cloud-sdk/path.zsh.inc' ]]       && source '/home/coop/Downloads/google-cloud-sdk/path.zsh.inc'
+[[ -f '/home/coop/Downloads/google-cloud-sdk/completion.zsh.inc' ]] && source '/home/coop/Downloads/google-cloud-sdk/completion.zsh.inc'
 
+# ── Aliases ────────────────────────────────────────────────────────────────────
+alias ll="ls -la"
+alias vim="nvim"
+alias devhobo="~/.local/bin/devhobo/start-dev"
+
+# ── Shell Init ─────────────────────────────────────────────────────────────────
 eval "$(zoxide init zsh)"
 eval "$(starship init zsh)"
-
-# opencode
-export PATH=/home/coop/.opencode/bin:$PATH
-
-source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
-source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

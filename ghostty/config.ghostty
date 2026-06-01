@@ -4,6 +4,12 @@ shell-integration = zsh
 # font size
 font-size = 10
 
+# window stuff
+background-opacity = 0.9
+background-blur-radius = 20
+window-padding-x = 10
+window-padding-y = 8
+
 # kanagawa dragon (saturated)
 background = 1d1b1b
 foreground = cfe7cf

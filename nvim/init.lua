@@ -65,13 +65,6 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus right' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus down' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus up' })
 
--- Window splits
-vim.keymap.set('n', '<leader>wv', '<cmd>vsplit<cr>', { desc = 'Vertical split' })
-vim.keymap.set('n', '<leader>wh', '<cmd>split<cr>', { desc = 'Horizontal split' })
-vim.keymap.set('n', '<leader>wc', '<cmd>close<cr>', { desc = 'Close split' })
-vim.keymap.set('n', '<leader>wo', '<cmd>only<cr>', { desc = 'Close other splits' })
-vim.keymap.set('n', '<leader>we', '<C-w>=', { desc = 'Equalise splits' })
-
 -- =========================================================
 -- DIAGNOSTICS
 -- =========================================================
@@ -290,14 +283,6 @@ require('lazy').setup({
         { 'sf', desc = 'Find surrounding (forward)' },
         { 'sF', desc = 'Find surrounding (backward)' },
 
-        -- w -> window management
-        { '<leader>w', group = 'Windows' },
-        { '<leader>wv', desc = 'Vertical split' },
-        { '<leader>wh', desc = 'Horizontal split' },
-        { '<leader>wc', desc = 'Close split' },
-        { '<leader>wo', desc = 'Close other splits' },
-        { '<leader>we', desc = 'Equalise splits' },
-
         -- Tab -> tab management
         { '<leader><tab>', group = 'Tabs' },
         { '<leader><tab>n', desc = 'New tab' },
@@ -317,6 +302,37 @@ require('lazy').setup({
         { '<sF>', desc = 'find (backwards)' },
       },
     },
+  },
+
+  -- -------------------------------------------------------
+  -- HYDRA - avoids mashing the same key combo 900 times, mostly just for window management
+  -- -------------------------------------------------------
+
+  {
+    'anuvyklack/hydra.nvim',
+    config = function()
+      local hydra = require 'hydra'
+      hydra {
+        name = 'Windows',
+        mode = 'n',
+        body = '<leader>w',
+        heads = {
+          { 'h', '<C-w>h', { desc = 'focus left' } },
+          { 'j', '<C-w>j', { desc = 'focus down' } },
+          { 'k', '<C-w>k', { desc = 'focus up' } },
+          { 'l', '<C-w>l', { desc = 'focus right' } },
+          { '>', '2<C-w>>', { desc = 'wider' } },
+          { '<', '2<C-w><', { desc = 'narrower' } },
+          { '+', '2<C-w>+', { desc = 'taller' } },
+          { '-', '2<C-w>-', { desc = 'shorter' } },
+          { '=', '<C-w>=', { desc = 'equalise' } },
+          { 'v', '<C-w>v', { desc = 'vsplit' } },
+          { 's', '<C-w>s', { desc = 'hsplit' } },
+          { 'q', '<C-w>q', { desc = 'close', exit = true } },
+          { '<Esc>', nil, { exit = true } },
+        },
+      }
+    end,
   },
 
   -- -------------------------------------------------------
@@ -683,12 +699,6 @@ require('lazy').setup({
       }
       vim.cmd 'colorscheme kanagawa-dragon'
       vim.api.nvim_set_hl(0, 'Comment', { fg = '#7a8f7a', italic = false })
-
-      -- clear background
-      vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
-      vim.api.nvim_set_hl(0, 'FloatBorder', { bg = 'NONE' })
-      vim.api.nvim_set_hl(0, 'FloatTitle', { bg = 'NONE' })
-      vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'NONE' })
     end,
   },
 
@@ -834,8 +844,6 @@ require('lazy').setup({
         hijack_netrw_behavior = 'open_current',
         filtered_items = {
           visible = true,
-          show_hidden_count = true,
-          hide_dotfiles = false,
         },
       },
       window = {

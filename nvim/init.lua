@@ -80,8 +80,9 @@ vim.diagnostic.config {
 }
 
 -- Navigate diagnostics
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Next diagnostic' })
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Prev diagnostic' })
+-- default binds anyways, these are depreiated functions
+-- vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Next diagnostic' })
+-- vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Prev diagnostic' })
 
 -- =========================================================
 -- AUTOCOMMANDS
@@ -258,10 +259,16 @@ require('lazy').setup({
         { '<leader>h3', desc = 'Jump to mark 3' },
         { '<leader>h4', desc = 'Jump to mark 4' },
 
-        -- m -> marks
-        { '<leader>m', group = 'Marks' },
-        { '<leader>ml', desc = 'List marks' },
-        { '<leader>mc', desc = 'Clear marks' },
+        -- k -> marks
+        { '<leader>k', group = 'Marks' },
+        { '<leader>kl', desc = 'List marks' },
+        { '<leader>kc', desc = 'Clear marks' },
+
+        -- m -> markdown
+        { '<leader>m', group = 'Markdown' },
+
+        -- u -> undotree
+        { '<leader>u', desc = 'Undo Tree' },
 
         -- t → toggles
         { '<leader>t', group = 'Toggles' },
@@ -302,37 +309,6 @@ require('lazy').setup({
         { '<sF>', desc = 'find (backwards)' },
       },
     },
-  },
-
-  -- -------------------------------------------------------
-  -- HYDRA - avoids mashing the same key combo 900 times, mostly just for window management
-  -- -------------------------------------------------------
-
-  {
-    'anuvyklack/hydra.nvim',
-    config = function()
-      local hydra = require 'hydra'
-      hydra {
-        name = 'Windows',
-        mode = 'n',
-        body = '<leader>w',
-        heads = {
-          { 'h', '<C-w>h', { desc = 'focus left' } },
-          { 'j', '<C-w>j', { desc = 'focus down' } },
-          { 'k', '<C-w>k', { desc = 'focus up' } },
-          { 'l', '<C-w>l', { desc = 'focus right' } },
-          { '>', '2<C-w>>', { desc = 'wider' } },
-          { '<', '2<C-w><', { desc = 'narrower' } },
-          { '+', '2<C-w>+', { desc = 'taller' } },
-          { '-', '2<C-w>-', { desc = 'shorter' } },
-          { '=', '<C-w>=', { desc = 'equalise' } },
-          { 'v', '<C-w>v', { desc = 'vsplit' } },
-          { 's', '<C-w>s', { desc = 'hsplit' } },
-          { 'q', '<C-w>q', { desc = 'close', exit = true } },
-          { '<Esc>', nil, { exit = true } },
-        },
-      }
-    end,
   },
 
   -- -------------------------------------------------------
@@ -499,7 +475,7 @@ require('lazy').setup({
       },
       'saadparwaiz1/cmp_luasnip', -- luasnip source for cmp
       -- Supermaven: registers itself as a cmp source automatically
-      { 'supermaven-inc/supermaven-nvim', opts = {} },
+      -- { 'supermaven-inc/supermaven-nvim', opts = {} },
     },
     config = function()
       local cmp = require 'cmp'
@@ -520,7 +496,7 @@ require('lazy').setup({
           ['<C-e>'] = cmp.mapping.abort(),
         },
         sources = cmp.config.sources {
-          { name = 'supermaven', priority = 100 }, -- AI suggestions first
+          -- { name = 'supermaven', priority = 100 }, -- AI suggestions first
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
@@ -665,41 +641,90 @@ require('lazy').setup({
   --   end,
   -- },
 
+  -- {
+  --   'rebelot/kanagawa.nvim',
+  --   config = function()
+  --     require('kanagawa').setup {
+  --       colors = {
+  --         palette = {
+  --           dragonRed = '#e87b73',
+  --           dragonGreen = '#86d386',
+  --           dragonGreen2 = '#9ec975',
+  --           dragonYellow = '#e6cc91',
+  --           dragonOrange = '#dda27d',
+  --           dragonOrange2 = '#df9a7d',
+  --           dragonBlue2 = '#8cbfd8',
+  --           dragonViolet = '#889ed1',
+  --           dragonPink = '#ca90ce',
+  --           dragonAqua = '#8ccfc9',
+  --           dragonTeal = '#97aedb',
+  --           dragonAsh = '#65b365',
+  --           dragonGray = '#cfcf9b',
+  --           dragonGray2 = '#caba90',
+  --           dragonGray3 = '#6fb7af',
+  --           dragonWhite = '#cfe7cf',
+  --           dragonBlack0 = '#121111',
+  --           dragonBlack1 = '#181814',
+  --           dragonBlack2 = '#22211e',
+  --           dragonBlack3 = '#1d1b1b',
+  --           dragonBlack4 = '#2d2c2c',
+  --           dragonBlack5 = '#3e3d3b',
+  --           dragonBlack6 = '#67635f',
+  --         },
+  --       },
+  --     }
+  --     vim.cmd 'colorscheme kanagawa-dragon'
+  --     vim.api.nvim_set_hl(0, 'Comment', { fg = '#7a8f7a', italic = false })
+  --
+  --     -- make background clear
+  --     vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'NONE' })
+  --     vim.api.nvim_set_hl(0, 'FloatBorder', { bg = 'NONE' })
+  --     vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
+  --     vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'NONE' })
+  --   end,
+  -- },
+
   {
-    'rebelot/kanagawa.nvim',
+    'sainnhe/gruvbox-material',
+    lazy = false,
+    priority = 1000,
     config = function()
-      require('kanagawa').setup {
-        colors = {
-          palette = {
-            dragonRed = '#e87b73',
-            dragonGreen = '#86d386',
-            dragonGreen2 = '#9ec975',
-            dragonYellow = '#e6cc91',
-            dragonOrange = '#dda27d',
-            dragonOrange2 = '#df9a7d',
-            dragonBlue2 = '#8cbfd8',
-            dragonViolet = '#889ed1',
-            dragonPink = '#ca90ce',
-            dragonAqua = '#8ccfc9',
-            dragonTeal = '#97aedb',
-            dragonAsh = '#65b365',
-            dragonGray = '#cfcf9b',
-            dragonGray2 = '#caba90',
-            dragonGray3 = '#6fb7af',
-            dragonWhite = '#cfe7cf',
-            dragonBlack0 = '#121111',
-            dragonBlack1 = '#181814',
-            dragonBlack2 = '#22211e',
-            dragonBlack3 = '#1d1b1b',
-            dragonBlack4 = '#2d2c2c',
-            dragonBlack5 = '#3e3d3b',
-            dragonBlack6 = '#67635f',
-          },
-        },
-      }
-      vim.cmd 'colorscheme kanagawa-dragon'
-      vim.api.nvim_set_hl(0, 'Comment', { fg = '#7a8f7a', italic = false })
+      -- Optionally configure and load the colorscheme
+      -- directly inside the plugin declaration.
+      vim.g.gruvbox_material_enable_italic = true
+      vim.cmd.colorscheme 'gruvbox-material'
+
+      -- make background clear
+      vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'FloatBorder', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'Normal', { bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'NormalNC', { bg = 'NONE' })
     end,
+  },
+
+  -- -------------------------------------------------------
+  -- smart panes (window integration with tmux)
+  -- -------------------------------------------------------
+  {
+    'mrjones2014/smart-splits.nvim',
+    lazy = false, -- needs to set @pane-is-vim for tmux immediately on load
+    opts = {
+      default_amount = 3,
+      at_edge = 'wrap',
+      ignored_filetypes = { 'neo-tree' },
+    },
+    keys = {
+      -- Movement (replaces your <C-hjkl> window nav binds)
+      { '<C-h>', function() require('smart-splits').move_cursor_left() end, desc = 'Move to left split' },
+      { '<C-j>', function() require('smart-splits').move_cursor_down() end, desc = 'Move to split below' },
+      { '<C-k>', function() require('smart-splits').move_cursor_up() end, desc = 'Move to split above' },
+      { '<C-l>', function() require('smart-splits').move_cursor_right() end, desc = 'Move to right split' },
+      -- Resize (Alt+hjkl, mirrors the tmux config below)
+      { '<A-h>', function() require('smart-splits').resize_left() end, desc = 'Resize left' },
+      { '<A-j>', function() require('smart-splits').resize_down() end, desc = 'Resize down' },
+      { '<A-k>', function() require('smart-splits').resize_up() end, desc = 'Resize up' },
+      { '<A-l>', function() require('smart-splits').resize_right() end, desc = 'Resize right' },
+    },
   },
 
   -- -------------------------------------------------------
@@ -774,6 +799,13 @@ require('lazy').setup({
     dependencies = { 'nvim-lua/plenary.nvim' },
     ---@diagnostic disable-next-line: missing-fields
     opts = { signs = false },
+  },
+
+  -- -------------------------------------------------------
+  -- UNDOTREE
+  -- -------------------------------------------------------
+  {
+    'mbbill/undotree',
   },
 
   -- -------------------------------------------------------
@@ -864,6 +896,16 @@ require('lazy').setup({
   },
 
   -- -------------------------------------------------------
+  -- RENDER MARKDOWN - pretty markdown preview
+  -- -------------------------------------------------------
+  --
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' },
+    opts = {},
+  },
+
+  -- -------------------------------------------------------
   -- HARPOON  (quick file marks)
   -- -------------------------------------------------------
 
@@ -904,11 +946,14 @@ local snacks = require 'snacks'
 -- ── Quick access ──────────────────────────────────────────
 vim.keymap.set('n', '<leader><space>', function() snacks.picker.files() end, { desc = 'Find files' })
 
+-- quick move left/right in insert mode
+vim.keymap.set('i', '<C-h>', '<Left>', { desc = 'Move cursor left' })
+vim.keymap.set('i', '<C-l>', '<Right>', { desc = 'Move cursor right' })
+
 -- ── f → Find (local / buffer) ─────────────────────────────
 vim.keymap.set('n', '<leader>ff', function() snacks.picker.lines() end, { desc = 'Find in buffer (lines)' })
 vim.keymap.set('n', '<leader>fb', function() snacks.picker.buffers() end, { desc = 'Buffers' })
 vim.keymap.set('n', '<leader>fc', function() snacks.picker.commands() end, { desc = 'Commands' })
-vim.keymap.set('n', '<leader>fe', '<cmd>Oil<cr>', { desc = 'Explore (Oil)' })
 vim.keymap.set('n', '<leader>fh', function() snacks.picker.help() end, { desc = 'Help tags' })
 vim.keymap.set('n', '<leader>fk', function() snacks.picker.keymaps() end, { desc = 'Keymaps' })
 
@@ -987,16 +1032,63 @@ harpoon_map('<leader>h2', function() require('harpoon'):list():select(2) end, 'J
 harpoon_map('<leader>h3', function() require('harpoon'):list():select(3) end, 'Jump to mark 3')
 harpoon_map('<leader>h4', function() require('harpoon'):list():select(4) end, 'Jump to mark 4')
 
--- ── m → Marks ───────────────────────────────────────────
-vim.keymap.set('n', '<leader>ml', '<cmd>marks<cr>', { desc = '[M]arks [L]ist' })
-vim.keymap.set('n', '<leader>mc', function() vim.cmd 'delmarks!' end, { desc = '[M]arks [C]lear' })
+-- ── k → Marks ───────────────────────────────────────────
+vim.keymap.set('n', '<leader>kl', '<cmd>marks<cr>', { desc = 'List marks' })
+vim.keymap.set('n', '<leader>kc', '<cmd>delmarks!<cr>', { desc = 'Clear local marks' })
+vim.keymap.set('n', '<leader>kC', '<cmd>delmarks A-Z<cr>', { desc = 'Clear global marks' })
+
+-- ── n → notes ───────────────────────────────────────────
+local TODO_FILENAME = '.todo.md'
+
+local function toggle_todo()
+  -- Close it if already open
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local name = vim.api.nvim_buf_get_name(buf)
+
+    if vim.fn.fnamemodify(name, ':t') == TODO_FILENAME then
+      vim.api.nvim_win_close(win, true)
+      return
+    end
+  end
+
+  -- Find project root
+  local root = vim.fs.root(0, { '.git' }) or vim.fn.getcwd()
+  local todo = root .. '/' .. TODO_FILENAME
+
+  -- Create file if missing
+  if vim.fn.filereadable(todo) == 0 then vim.fn.writefile({}, todo) end
+
+  vim.cmd 'vsplit'
+  vim.cmd('edit ' .. vim.fn.fnameescape(todo))
+end
+
+vim.keymap.set('n', '<leader>n', toggle_todo, {
+  desc = 'Toggle project todo',
+})
+
+-- ── m → Markdown ───────────────────────────────────────────
+vim.keymap.set('n', '<leader>mt', function() vim.cmd 'RenderMarkdown toggle' end, { desc = 'Toggle render' })
+vim.keymap.set('n', '<leader>mc', function()
+  local line = vim.api.nvim_get_current_line()
+  local new_line
+  if line:match '^%s*- %[x%]' then
+    new_line = line:gsub('%[x%]', '[ ]', 1)
+  elseif line:match '^%s*- %[ %]' then
+    new_line = line:gsub('%[ %]', '[x]', 1)
+  end
+  if new_line then vim.api.nvim_set_current_line(new_line) end
+end, { desc = 'Toggle checkbox' })
+
+-- ── u → Undotree ─────────────────────────────
+vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle)
+vim.g.undotree_SetFocusWhenToggle = 1
 
 -- ── x → Diagnostics / Trouble ─────────────────────────────
 vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Workspace diagnostics' })
 vim.keymap.set('n', '<leader>xb', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', { desc = 'Buffer diagnostics' })
 vim.keymap.set('n', '<leader>xq', '<cmd>Trouble quickfix toggle<cr>', { desc = 'Quickfix list' })
 vim.keymap.set('n', '<leader>xd', function() snacks.picker.diagnostics() end, { desc = 'Diagnostics picker' })
-vim.keymap.set('n', '<leader>n', function() Snacks.scratch() end, { desc = 'Scratch buffer' })
 
 -- ── Disable tabline (bufferline handles this) ─────────────
 vim.opt.showtabline = 2

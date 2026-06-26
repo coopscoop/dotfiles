@@ -1,7 +1,8 @@
 # use zsh by default instead of bash
 shell-integration = zsh
 
-# font size
+# font
+font-family = JetBrainsMono Nerd Font
 font-size = 10
 
 # window stuff
@@ -10,32 +11,5 @@ background-blur-radius = 20
 window-padding-x = 10
 window-padding-y = 8
 
-# kanagawa dragon (saturated)
-background = 1d1b1b
-foreground = cfe7cf
-selection-background = 3e3d3b
-selection-foreground = cfe7cf
-cursor-color = e6cc91
-
-# Normal colors (0-7)
-palette = 0=#1d1b1b
-palette = 1=#e87b73
-palette = 2=#86d386
-palette = 3=#e6cc91
-palette = 4=#8cbfd8
-palette = 5=#ca90ce
-palette = 6=#8ccfc9
-palette = 7=#cfe7cf
-
-# Bright colors (8-15)
-palette = 8=#67635f
-palette = 9=#dda27d
-palette = 10=#9ec975
-palette = 11=#df9a7d
-palette = 12=#97aedb
-palette = 13=#889ed1
-palette = 14=#8ccfc9
-palette = 15=#cfe7cf
-
-# copy current buffer to vim buffer
-keybind = ctrl+shift+y=write_screen_file:open
+# theme
+theme = Gruvbox Material

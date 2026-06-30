@@ -4,10 +4,8 @@ source ~/dotfiles/zsh/plugins/antigen.zsh
 antigen bundle zsh-users/zsh-completions
 antigen bundle zsh-users/zsh-autosuggestions
 antigen bundle zsh-users/zsh-syntax-highlighting
-antigen apply
 
-# ── Antigen Binds ────────────────────────────────────────────────────────────────────
-bindkey '^Y' autosuggest-accept # Ctrl-y
+antigen apply
 
 # ── Environment ────────────────────────────────────────────────────────────────
 export EDITOR=nvim
@@ -47,3 +45,4 @@ eval "$(starship init zsh)"
 
 # remove vi mode in shell but keep vim type copy mode movements
 bindkey -e
+bindkey '^Y' autosuggest-accept # Ctrl-y

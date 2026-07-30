@@ -12,6 +12,8 @@ export EDITOR=nvim
 export OLLAMA_API_BASE=http://localhost:11434
 export PATH="/home/coop/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # ── HISTFILE setup ─────────────────────────────────────────────────────────────────
 HISTFILE=~/.zsh_history

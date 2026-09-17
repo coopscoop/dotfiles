@@ -1,4 +1,3 @@
--- Set <space> as the leader key
 -- NOTE: Must happen before plugins are loaded
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
@@ -37,9 +36,6 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Sync clipboard after UI loads (avoids startup slowdown)
 vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
-
--- Disable vim lsp sig handler (nvim-cmp handles signature help via cmp-nvim-lsp)
-vim.lsp.handlers['textDocument/signatureHelp'] = function() end
 
 -- =========================================================
 -- BASIC KEYMAPS
@@ -124,31 +120,29 @@ require('lazy').setup({
     -- Gutter signs + hunk/blame actions
     'lewis6991/gitsigns.nvim',
     ---@module 'gitsigns'
-    ---@type Gitsigns.Config
     opts = {
       signs = {
-        add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-        change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-        delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-        topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-        changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
+        add = { text = '+' },
+        change = { text = '~' },
+        delete = { text = '_' },
+        topdelete = { text = '‾' },
+        changedelete = { text = '~' },
       },
       on_attach = function(bufnr)
         local gs = require 'gitsigns'
         local map = function(keys, fn, desc) vim.keymap.set('n', keys, fn, { buffer = bufnr, desc = desc }) end
 
         -- Hunk navigation (feels natural alongside ]d/[d for diagnostics)
-        map(']h', gs.next_hunk, 'Next hunk')
-        map('[h', gs.prev_hunk, 'Prev hunk')
+        map(']h', function() gs.nav_hunk 'next' end, 'Next hunk')
+        map('[h', function() gs.nav_hunk 'prev' end, 'Prev hunk')
 
         -- Hunk actions under <leader>g
         map('<leader>gp', gs.preview_hunk, 'Preview hunk')
         map('<leader>gs', gs.stage_hunk, 'Stage hunk')
-        map('<leader>gu', gs.undo_stage_hunk, 'Undo stage hunk')
         map('<leader>gS', gs.stage_buffer, 'Stage buffer')
         map('<leader>gb', gs.blame_line, 'Blame line')
         map('<leader>gB', function() gs.blame_line { full = true } end, 'Blame line (full)')
-        map('<leader>gR', gs.reset_hunk, 'Reset hunk')
+        map('<leader>gr', gs.reset_hunk, 'Reset hunk')
       end,
     },
   },
@@ -184,10 +178,6 @@ require('lazy').setup({
         align = 'right',
         width = { min = 30, max = 42 },
         height = { min = 4, max = 25 },
-        spacing = 3,
-      },
-
-      icons = {
         mappings = vim.g.have_nerd_font,
         -- Show a plain › for groups instead of an icon when no nerd font
         group = vim.g.have_nerd_font and '' or '›',
@@ -196,32 +186,22 @@ require('lazy').setup({
       sort = { 'local', 'order', 'group', 'alphanum' },
 
       spec = {
-        -- Quick access (no sub-menu, sits at top level)
+        -- Quick access
         { '<leader><space>', desc = 'Find files' },
-        { '-', desc = 'NeoTree' },
 
-        -- f → local/buffer search
-        { '<leader>f', group = 'Find (local)' },
-        { '<leader>ff', desc = 'Find in buffer (lines)' },
-        { '<leader>fb', desc = 'Buffers' },
-        { '<leader>fh', desc = 'Help tags' },
-        { '<leader>fk', desc = 'Keymaps' },
+        -- f → file-local search
+        { '<leader>f', group = 'File' },
+        { '<leader>f', desc = 'Find lines in current file' },
 
-        -- s → system-wide / project search
-        { '<leader>s', group = 'Search (project)' },
-        { '<leader>sr', desc = 'Recent files' },
-        { '<leader>sw', desc = 'Grep word under cursor' },
-        { '<leader>sn', desc = 'Search nvim config' },
+        -- s → project-wide search
+        { '<leader>s', group = 'Search' },
+        { '<leader>S', desc = 'Grep repository' },
+        { '<leader>sk', desc = 'Keymaps' },
+        { '<leader>st', desc = 'TODO / FIX / HACK' },
 
-        -- a → AI (CodeCompanion)
-        { '<leader>a', group = 'AI' },
-        { '<leader>ac', desc = 'Chat toggle' },
-        { '<leader>aa', desc = 'Actions' },
-        { '<leader>ai', desc = 'Send selection to chat' },
-
-        -- c → code (LSP, format, refactor)
+        -- c → code / LSP
         { '<leader>c', group = 'Code' },
-        { '<leader>ca', desc = 'Code action' },
+        { '<leader>C', desc = 'Code action' },
         { '<leader>cr', desc = 'Rename symbol' },
         { '<leader>cf', desc = 'Format buffer' },
         { '<leader>cs', desc = 'Document symbols' },
@@ -229,6 +209,7 @@ require('lazy').setup({
 
         -- b → buffer management
         { '<leader>b', group = 'Buffers' },
+        { '<leader>B', desc = 'Buffer search' },
         { '<leader>bn', desc = 'Next buffer' },
         { '<leader>bp', desc = 'Prev buffer' },
         { '<leader>bd', desc = 'Delete buffer' },
@@ -236,9 +217,9 @@ require('lazy').setup({
         { '<leader>ba', desc = 'Close all buffers' },
         { '<leader>bo', desc = 'Close other buffers' },
 
-        -- g → git (diffview + gitsigns)
+        -- g → git
         { '<leader>g', group = 'Git' },
-        { '<leader>gd', desc = 'Toggle Diffview' },
+        { '<leader>gd', desc = 'Diff' },
         { '<leader>gh', desc = 'File history' },
         { '<leader>gp', desc = 'Preview hunk' },
         { '<leader>gs', desc = 'Stage hunk' },
@@ -248,65 +229,40 @@ require('lazy').setup({
         { '<leader>gB', desc = 'Blame line (full)' },
         { '<leader>gR', desc = 'Reset hunk' },
 
-        -- h → harpoon
+        -- a → AI
+        { '<leader>a', group = 'AI' },
+        { '<leader>A', desc = 'Inline' },
+        { '<leader>ac', desc = 'Chat toggle' },
+        { '<leader>aa', desc = 'Actions' },
+        { '<leader>as', desc = 'Add selection' },
+        { '<leader>ax', desc = 'New chat' },
+        { '<leader>ar', desc = 'Refresh cache' },
+
+        -- d → diagnostics
+        { '<leader>d', group = 'Diagnostics' },
+        { '<leader>D', desc = 'Open diagnostic list' },
+
+        -- h → Harpoon
         { '<leader>h', group = 'Harpoon' },
+        { '<leader>H', desc = 'Harpoon menu' },
         { '<leader>ha', desc = 'Add file' },
-        { '<leader>hh', desc = 'Menu' },
-        { '<leader>hn', desc = 'Next mark' },
-        { '<leader>hp', desc = 'Prev mark' },
-        { '<leader>h1', desc = 'Jump to mark 1' },
-        { '<leader>h2', desc = 'Jump to mark 2' },
-        { '<leader>h3', desc = 'Jump to mark 3' },
-        { '<leader>h4', desc = 'Jump to mark 4' },
+        { '<leader>hn', desc = 'Next file' },
+        { '<leader>hp', desc = 'Previous file' },
 
-        -- k -> marks
-        { '<leader>k', group = 'Marks' },
-        { '<leader>kl', desc = 'List marks' },
-        { '<leader>kc', desc = 'Clear marks' },
-
-        -- m -> markdown
-        { '<leader>m', group = 'Markdown' },
-
-        -- u -> undotree
-        { '<leader>u', desc = 'Undo Tree' },
+        -- n → project notes
+        { '<leader>N', desc = 'Toggle project todo' },
 
         -- t → toggles
         { '<leader>t', group = 'Toggles' },
         { '<leader>th', desc = 'Inlay hints' },
 
-        -- x → diagnostics / trouble
-        { '<leader>x', group = 'Diagnostics' },
-        { '<leader>xx', desc = 'Workspace diagnostics' },
-        { '<leader>xb', desc = 'Buffer diagnostics' },
-        { '<leader>xq', desc = 'Quickfix list' },
-        { '<leader>xd', desc = 'Diagnostics picker' },
-        { '<leader>xl', desc = 'Quickfix list (Trouble)' },
-
-        -- s -> surround
+        -- Surround (no leader)
         { 's', group = 'Surround' },
         { 'sa', desc = 'Add surrounding' },
         { 'sd', desc = 'Delete surrounding' },
         { 'sr', desc = 'Replace surrounding' },
         { 'sf', desc = 'Find surrounding (forward)' },
         { 'sF', desc = 'Find surrounding (backward)' },
-
-        -- Tab -> tab management
-        { '<leader><tab>', group = 'Tabs' },
-        { '<leader><tab>n', desc = 'New tab' },
-        { '<leader><tab>z', desc = 'Zoom window' },
-        { '<leader><tab>]', desc = 'Next tab' },
-        { '<leader><tab>[', desc = 'Prev tab' },
-        { '<leader><tab>c', desc = 'Close tab' },
-
-        -- Surround (no leader — mini.surround uses bare s* binds)
-        -- Listed here so which-key shows them when you press s in normal mode
-        -- sa = add, sd = delete, sr = replace, sf/sF = find
-        { '<s>', group = 'Surround' },
-        { '<sa>', desc = 'Add' },
-        { '<sd>', desc = 'Delete' },
-        { '<sr>', desc = 'Replace' },
-        { '<sf>', desc = 'find (forwards)' },
-        { '<sF>', desc = 'find (backwards)' },
       },
     },
   },
@@ -319,7 +275,6 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       { 'mason-org/mason.nvim', opts = {} }, ---@diagnostic disable-line: missing-fields
-      'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
       { 'j-hui/fidget.nvim', opts = {} },
     },
@@ -334,15 +289,13 @@ require('lazy').setup({
 
           -- Go-to actions (use built-in gr* defaults from Neovim 0.11+)
           map('<leader>cr', vim.lsp.buf.rename, 'Rename symbol')
-          map('<leader>ca', vim.lsp.buf.code_action, 'Code action', { 'n', 'x' })
+          map('<leader>C', vim.lsp.buf.code_action, 'Code action', { 'n', 'x' })
           map('<leader>cs', vim.lsp.buf.document_symbol, 'Document symbols')
           map('<leader>cS', vim.lsp.buf.workspace_symbol, 'Workspace symbols')
           map('gD', vim.lsp.buf.declaration, 'Goto declaration')
           map('gd', vim.lsp.buf.definition, 'Goto definition')
           map('gr', vim.lsp.buf.references, 'References')
           map('K', vim.lsp.buf.hover, 'Hover docs')
-
-          -- Leader code binds (mirrors which-key spec above)
 
           -- Highlight references on cursor hold
           local client = vim.lsp.get_client_by_id(event.data.client_id)
@@ -374,10 +327,18 @@ require('lazy').setup({
         end,
       })
 
+      -- LSP UPDATE ON FILE SAVE
+      vim.lsp.config('*', {
+        capabilities = {
+          workspace = {
+            didChangeWatchedFiles = {
+              dynamicRegistration = true,
+            },
+          },
+        },
+      })
       ---@type table<string, vim.lsp.Config>
       local servers = {
-        tsgo = {},
-        stylua = {},
         lua_ls = {
           on_init = function(client)
             client.server_capabilities.documentFormattingProvider = false
@@ -385,7 +346,7 @@ require('lazy').setup({
               local path = client.workspace_folders[1].name
               if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
             end
-            client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+            client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua or {}, {
               runtime = { version = 'LuaJIT', path = { 'lua/?.lua', 'lua/?/init.lua' } },
               workspace = {
                 checkThirdParty = false,
@@ -401,10 +362,20 @@ require('lazy').setup({
             Lua = { format = { enable = false } },
           },
         },
+        ts_ls = {},
+
+        eslint = {},
       }
 
-      local ensure_installed = vim.tbl_keys(servers or {})
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+      require('mason-tool-installer').setup {
+        ensure_installed = {
+          'lua-language-server',
+          'typescript-language-server',
+          'eslint-lsp',
+          'stylua',
+          'prettier',
+        },
+      }
 
       for name, server in pairs(servers) do
         vim.lsp.config(name, server)
@@ -446,9 +417,17 @@ require('lazy').setup({
       end,
       default_format_opts = { lsp_format = 'fallback' },
       formatters_by_ft = {
-        -- rust       = { 'rustfmt' },
-        -- python     = { 'isort', 'black' },
-        -- javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        lua = { 'stylua' },
+
+        -- javascript = { 'prettier' },
+        -- javascriptreact = { 'prettier' },
+        -- typescript = { 'prettier' },
+        -- typescriptreact = { 'prettier' },
+
+        json = { 'prettier' },
+        jsonc = { 'prettier' },
+
+        css = { 'prettier' },
       },
     },
   },
@@ -456,15 +435,10 @@ require('lazy').setup({
   -- -------------------------------------------------------
   -- COMPLETION
   -- -------------------------------------------------------
-
   {
-    'hrsh7th/nvim-cmp',
-    event = 'InsertEnter',
+    'saghen/blink.cmp',
+    version = '1.*',
     dependencies = {
-      -- Sources
-      'hrsh7th/cmp-nvim-lsp', -- LSP completions
-      'hrsh7th/cmp-path', -- filesystem paths
-      -- Snippets
       {
         'L3MON4D3/LuaSnip',
         version = '2.*',
@@ -473,49 +447,36 @@ require('lazy').setup({
           return 'make install_jsregexp'
         end)(),
       },
-      'saadparwaiz1/cmp_luasnip', -- luasnip source for cmp
-      -- Supermaven: registers itself as a cmp source automatically
-      -- { 'supermaven-inc/supermaven-nvim', opts = {} },
     },
-    config = function()
-      local cmp = require 'cmp'
-      local luasnip = require 'luasnip'
-
-      cmp.setup {
-        snippet = {
-          expand = function(args) luasnip.lsp_expand(args.body) end,
+    opts = {
+      keymap = {
+        preset = 'none',
+        ['<C-y>'] = { 'select_and_accept' },
+        ['<C-n>'] = { 'select_next' },
+        ['<C-p>'] = { 'select_prev' },
+        ['<C-Space>'] = { 'show' },
+        ['<C-e>'] = { 'cancel' },
+        ['<C-d>'] = { 'scroll_documentation_down' },
+        ['<C-u>'] = { 'scroll_documentation_up' },
+      },
+      appearance = {
+        nerd_font_variant = vim.g.have_nerd_font and 'mono' or 'normal',
+      },
+      completion = {
+        documentation = { auto_show = true },
+        ghost_text = { enabled = true },
+        list = {
+          selection = { preselect = true, auto_insert = false },
         },
-        mapping = cmp.mapping.preset.insert {
-          ['<C-n>'] = cmp.mapping.select_next_item(),
-          ['<C-p>'] = cmp.mapping.select_prev_item(),
-          ['<C-y>'] = cmp.mapping.confirm { select = true },
-          ['<Tab>'] = cmp.mapping.confirm { select = true },
-          ['<C-d>'] = cmp.mapping.scroll_docs(4),
-          ['<C-u>'] = cmp.mapping.scroll_docs(-4),
-          ['<C-Space>'] = cmp.mapping.complete(),
-          ['<C-e>'] = cmp.mapping.abort(),
-        },
-        sources = cmp.config.sources {
-          -- { name = 'supermaven', priority = 100 }, -- AI suggestions first
-          { name = 'nvim_lsp' },
-          { name = 'luasnip' },
-          { name = 'path' },
-        },
-        window = {
-          completion = cmp.config.window.bordered { max_height = 5 },
-          documentation = cmp.config.window.bordered(),
-        },
-        formatting = {
-          format = function(entry, item)
-            item.menu = nil -- removes the [supermaven] / [LSP] label on the right
-            item.abbr = item.abbr:sub(1, 50) -- truncate long completions to one line
-            return item
-          end,
-        },
-        -- Show ghost text preview of selected item
-        experimental = { ghost_text = false },
-      }
-    end,
+      },
+      snippets = {
+        preset = 'luasnip',
+      },
+      sources = {
+        default = { 'lsp', 'path', 'snippets', 'buffer' },
+      },
+      fuzzy = { implementation = 'prefer_rust_with_warning' },
+    },
   },
 
   -- -------------------------------------------------------
@@ -567,7 +528,7 @@ require('lazy').setup({
   {
     'nvim-mini/mini.nvim',
     config = function()
-      -- Icons: mocks nvim-web-devicons so neo-tree/bufferline use mini.icons instead
+      -- Icons: provide the icon system used by the UI
       require('mini.icons').setup {}
       MiniIcons.mock_nvim_web_devicons()
 
@@ -584,19 +545,18 @@ require('lazy').setup({
       -- Example: saiw) wraps word in parens, sd' deletes quotes, sr)' replaces ) with '
       require('mini.surround').setup {
         mappings = {
-          add = 'sa', -- Add surrounding
-          delete = 'sd', -- Delete surrounding
-          replace = 'sr', -- Replace surrounding
-          find = 'sf', -- Find surrounding (forward)
-          find_left = 'sF', -- Find surrounding (backward)
-          highlight = 'sh', -- Highlight surrounding
-          update_n_lines = 'sn', -- Update n_lines
+          add = 'sa',
+          delete = 'sd',
+          replace = 'sr',
+          find = 'sf',
+          find_left = 'sF',
+          highlight = 'sh',
+          update_n_lines = 'sn',
         },
       }
 
       require('mini.pairs').setup {
         modes = { insert = true, command = false, terminal = false },
-        -- don't pair in these contexts
         skip_next = [=[[%w%%%'%[%"%.%`%$]]=],
         skip_ts = { 'string' },
         skip_unbalanced = true,
@@ -606,8 +566,40 @@ require('lazy').setup({
       -- Statusline
       local statusline = require 'mini.statusline'
       statusline.setup { use_icons = vim.g.have_nerd_font }
+
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function() return '%2l:%-2v' end
+
+      vim.api.nvim_set_hl(0, 'HarpoonActive', {
+        link = 'Title',
+      })
+
+      local original_filename = statusline.section_filename
+
+      statusline.section_filename = function(args)
+        local harpoon = require 'harpoon'
+        local items = harpoon:list().items
+        local current = vim.api.nvim_buf_get_name(0)
+        local parts = {}
+
+        for i = 1, math.min(#items, 4) do
+          local path = items[i].value
+          local name = vim.fn.fnamemodify(path, ':t')
+
+          if path == current then
+            table.insert(parts, string.format('%%#HarpoonActive#[%d] %s%%*', i, name))
+          else
+            table.insert(parts, string.format('%%#MiniStatuslineFilename#[%d] %s%%*', i, name))
+          end
+        end
+
+        local marks = table.concat(parts, '  ')
+        local filename = original_filename(args)
+
+        if marks == '' then return filename end
+
+        return marks .. '  ' .. filename
+      end
     end,
   },
 
@@ -711,7 +703,6 @@ require('lazy').setup({
     opts = {
       default_amount = 3,
       at_edge = 'wrap',
-      ignored_filetypes = { 'neo-tree' },
     },
     keys = {
       -- Movement (replaces your <C-hjkl> window nav binds)
@@ -735,12 +726,19 @@ require('lazy').setup({
     priority = 1000,
     lazy = false,
     opts = {
-      picker = { enabled = true },
+      picker = {
+        sources = {
+          files = { hidden = true },
+          grep = { hidden = true },
+          explorer = { hidden = true },
+        },
+      },
+      notifier = { enabled = true },
 
       scroll = {
         enabled = true,
         animate = {
-          duration = { step = 10, total = 100 }, -- shorter than default
+          duration = { step = 10, total = 40 }, -- shorter than default
           easing = 'linear',
         },
       },
@@ -780,16 +778,6 @@ require('lazy').setup({
   },
 
   -- -------------------------------------------------------
-  -- TROUBLE  (diagnostics UI)
-  -- -------------------------------------------------------
-
-  {
-    'folke/trouble.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    opts = {},
-  },
-
-  -- -------------------------------------------------------
   -- TODO COMMENTS
   -- -------------------------------------------------------
 
@@ -802,13 +790,6 @@ require('lazy').setup({
   },
 
   -- -------------------------------------------------------
-  -- UNDOTREE
-  -- -------------------------------------------------------
-  {
-    'mbbill/undotree',
-  },
-
-  -- -------------------------------------------------------
   -- AI  (CodeCompanion → local Ollama)
   -- -------------------------------------------------------
 
@@ -816,81 +797,127 @@ require('lazy').setup({
     'olimorris/codecompanion.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'nvim-treesitter/nvim-treesitter',
     },
+
     opts = {
-      strategies = {
+      adapters = {
+        http = {
+          llama = function()
+            return require('codecompanion.adapters').extend('openai_compatible', {
+              env = {
+                url = 'http://127.0.0.1:8080',
+                api_key = 'local',
+                chat_url = '/v1/chat/completions',
+              },
+
+              schema = {
+                model = {
+                  default = 'Qwen3.5-9B',
+                },
+              },
+            })
+          end,
+        },
+      },
+
+      interactions = {
         chat = {
-          adapter = 'ollama',
-          slash_commands = {
-            buffer = {
-              opts = { provider = 'default' },
+          adapter = 'llama',
+
+          opts = {
+            -- Automatically manage the conversation as it approaches
+            -- the model's context limit.
+            context_management = {
+              enabled = true,
+
+              editing = {
+                trigger = 0.65,
+                keep_cycles = 3,
+              },
+
+              compaction = {
+                trigger = 0.85,
+              },
             },
           },
         },
-        inline = { adapter = 'ollama' },
-      },
-      adapters = {
-        ollama = function()
-          return require('codecompanion.adapters').extend('ollama', {
-            schema = {
-              model = { default = 'qwen2.5-coder:7b' },
-            },
-          })
-        end,
-      },
-    },
-  },
 
-  -- -------------------------------------------------------
-  -- BUFFERLINE
-  -- -------------------------------------------------------
-
-  {
-    'akinsho/bufferline.nvim',
-
-    opts = {
-
-      options = {
-        mode = 'buffers',
-        diagnostics = 'nvim_lsp',
-        show_buffer_close_icons = true,
-        show_close_icon = false,
-      },
-    },
-  },
-
-  -- -------------------------------------------------------
-  -- NEOTREE (quick file manager)
-  -- -------------------------------------------------------
-
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'MunifTanjim/nui.nvim',
-    },
-    opts = {
-      filesystem = {
-        hijack_netrw_behavior = 'open_current',
-        filtered_items = {
-          visible = true,
+        inline = {
+          adapter = 'llama',
         },
       },
-      window = {
-        width = 35,
-        mappings = {
-          -- vim movement are default binds (enter also works)
-          ['v'] = 'open_vsplit',
-          ['x'] = 'open_split',
+
+      -- Project-wide instructions.
+      rules = {
+        default = {
+          description = 'Project coding rules',
+          files = {
+            'AGENTS.md',
+          },
+        },
+
+        opts = {
+          chat = {
+            autoload = 'default',
+            enabled = true,
+          },
         },
       },
-      event_handlers = {
-        {
-          event = 'file_opened',
-          handler = function() require('neo-tree.command').execute { action = 'close' } end,
+
+      display = {
+        chat = {
+          start_in_insert_mode = true,
+          show_header_separator = false,
+          show_token_count = true,
         },
+
+        diff = {
+          enabled = true,
+        },
+      },
+    },
+
+    keys = {
+      {
+        '<leader>ac',
+        '<cmd>CodeCompanionChat Toggle<cr>',
+        mode = { 'n', 'v' },
+        desc = 'CodeCompanion Chat',
+      },
+
+      {
+        '<leader>aa',
+        '<cmd>CodeCompanionActions<cr>',
+        mode = { 'n', 'v' },
+        desc = 'CodeCompanion Actions',
+      },
+
+      {
+        '<leader>A',
+        '<cmd>CodeCompanion<cr>',
+        mode = { 'n', 'v' },
+        desc = 'CodeCompanion Inline',
+      },
+
+      {
+        '<leader>as',
+        '<cmd>CodeCompanionChat Add<cr>',
+        mode = 'v',
+        desc = 'Add selection to CodeCompanion',
+      },
+
+      {
+        '<leader>ax',
+        '<cmd>CodeCompanionChat<cr>',
+        mode = 'n',
+        desc = 'New CodeCompanion Chat',
+      },
+
+      {
+        '<leader>ar',
+        '<cmd>CodeCompanionChat RefreshCache<cr>',
+        mode = 'n',
+        desc = 'Refresh CodeCompanion',
       },
     },
   },
@@ -912,8 +939,21 @@ require('lazy').setup({
   {
     'ThePrimeagen/harpoon',
     branch = 'harpoon2',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = {},
+    keys = {
+      { '<leader>ha', function() require('harpoon'):list():add() end, desc = 'Harpoon add file' },
+      {
+        '<leader>H',
+        function()
+          local harpoon = require 'harpoon'
+          harpoon.ui:toggle_quick_menu(harpoon:list())
+        end,
+        desc = 'Harpoon menu',
+      },
+      { '<leader>1', function() require('harpoon'):list():select(1) end, desc = 'Harpoon file 1' },
+      { '<leader>2', function() require('harpoon'):list():select(2) end, desc = 'Harpoon file 2' },
+      { '<leader>3', function() require('harpoon'):list():select(3) end, desc = 'Harpoon file 3' },
+      { '<leader>4', function() require('harpoon'):list():select(4) end, desc = 'Harpoon file 4' },
+    },
   },
 }, {
   -- Lazy UI icons (fallback for non-nerd-font setups)
@@ -937,65 +977,61 @@ require('lazy').setup({
 })
 
 -- =========================================================
+-- CODE COMPANION INLINE NOTIF
+-- =========================================================
+local cc_notifier
+
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'CodeCompanionRequestStarted',
+  callback = function()
+    cc_notifier = Snacks.notify('󰚩 Working...', {
+      title = 'CodeCompanion',
+      timeout = 100000,
+    })
+  end,
+})
+
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'CodeCompanionRequestFinished',
+  callback = function()
+    if cc_notifier then
+      Snacks.notifier.hide(cc_notifier)
+      cc_notifier = nil
+    end
+  end,
+})
+
+-- =========================================================
 -- CUSTOM KEYMAPS
--- (all plugin keymaps live here, after lazy.setup)
+-- (shared/custom keymaps live here, after lazy.setup)
 -- =========================================================
 
 local snacks = require 'snacks'
 
--- ── Quick access ──────────────────────────────────────────
+-- ── Files ────────────────────────────────────────────────────
 vim.keymap.set('n', '<leader><space>', function() snacks.picker.files() end, { desc = 'Find files' })
+vim.keymap.set('n', '<leader>f', function() snacks.picker.lines() end, { desc = 'Find lines in current file' })
 
--- quick move left/right in insert mode
-vim.keymap.set('i', '<C-h>', '<Left>', { desc = 'Move cursor left' })
-vim.keymap.set('i', '<C-l>', '<Right>', { desc = 'Move cursor right' })
+-- ── Search ──────────────────────────────────────────────────
+vim.keymap.set('n', '<leader>S', function() snacks.picker.grep() end, { desc = 'Grep repository' })
+vim.keymap.set('n', '<leader>sk', function() snacks.picker.keymaps() end, { desc = 'Keymaps' })
+vim.keymap.set('n', '<leader>st', function()
+  snacks.picker.grep {
+    search = 'TODO|FIXME|HACK|WARN|PERF|NOTE|TEST', -- KEYWORDS TO SEARCH FOR
+    regex = true,
+  }
+end, { desc = 'Search TODO / FIX / HACK' })
 
--- ── f → Find (local / buffer) ─────────────────────────────
-vim.keymap.set('n', '<leader>ff', function() snacks.picker.lines() end, { desc = 'Find in buffer (lines)' })
-vim.keymap.set('n', '<leader>fb', function() snacks.picker.buffers() end, { desc = 'Buffers' })
-vim.keymap.set('n', '<leader>fc', function() snacks.picker.commands() end, { desc = 'Commands' })
-vim.keymap.set('n', '<leader>fh', function() snacks.picker.help() end, { desc = 'Help tags' })
-vim.keymap.set('n', '<leader>fk', function() snacks.picker.keymaps() end, { desc = 'Keymaps' })
-
--- ── s → Search (project-wide) ─────────────────────────────
-vim.keymap.set('n', '<leader>sg', function() snacks.picker.grep() end, { desc = 'Live grep' })
-vim.keymap.set('n', '<leader>sr', function() snacks.picker.recent() end, { desc = 'Recent files' })
-vim.keymap.set('n', '<leader>sw', function() snacks.picker.grep_word() end, { desc = 'Grep word under cursor' })
-vim.keymap.set('n', '<leader>sn', function() snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, { desc = 'Search nvim config' })
-
--- ── a → AI (CodeCompanion) ────────────────────────────────
-vim.keymap.set({ 'n', 'v' }, '<leader>ac', '<cmd>CodeCompanionChat Toggle<cr>', { desc = 'Chat toggle' })
-vim.keymap.set({ 'n', 'v' }, '<leader>aa', '<cmd>CodeCompanionActions<cr>', { desc = 'Actions' })
--- check if the buffer exists or not, handles dupe code blocks on init load
-vim.keymap.set('v', '<leader>ai', function()
-  local has_chat = false
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.bo[buf].filetype == 'codecompanion' then
-      has_chat = true
-      break
-    end
-  end
-  if has_chat then
-    vim.cmd 'CodeCompanionChat Add'
-  else
-    vim.cmd 'CodeCompanionChat Toggle'
-  end
-end, { desc = 'Send selection to chat' })
-vim.keymap.set('v', '<leader>ae', '<cmd>CodeCompanionChat Explain<cr>', { desc = 'Explain selection' })
-vim.keymap.set('v', '<leader>af', '<cmd>CodeCompanionChat Fix<cr>', { desc = 'Fix selection' })
-
--- ── e → NeoTree ───────────────────────────────────────────
-vim.keymap.set('n', '-', '<cmd>Neotree toggle<cr>', { desc = 'Neo-tree toggle' })
-
--- ── b → Buffers ───────────────────────────────────────────
+-- ── Buffers ─────────────────────────────────────────────────
+vim.keymap.set('n', '<leader>B', function() snacks.picker.buffers() end, { desc = 'Buffer search' })
 vim.keymap.set('n', '<leader>bn', '<cmd>bnext<cr>', { desc = 'Next buffer' })
 vim.keymap.set('n', '<leader>bp', '<cmd>bprevious<cr>', { desc = 'Prev buffer' })
 vim.keymap.set('n', '<leader>bd', '<cmd>bd<cr>', { desc = 'Delete buffer' })
 vim.keymap.set('n', '<leader>bD', '<cmd>bd!<cr>', { desc = 'Delete buffer (force)' })
+vim.keymap.set('n', '<leader>ba', '<cmd>%bd<cr>', { desc = 'Close all buffers' })
+vim.keymap.set('n', '<leader>bo', '<cmd>%bd|e#|bd#<cr>', { desc = 'Close other buffers' })
 
--- ── g → Git ───────────────────────────────────────────────
--- Diffview
--- toggles open/close without two binds
+-- ── Git ──────────────────────────────────────────────────────
 vim.keymap.set('n', '<leader>gd', function()
   local lib = require 'diffview.lib'
   local view = lib.get_current_view()
@@ -1014,34 +1050,37 @@ vim.keymap.set('n', '<leader>gh', function()
   else
     vim.cmd 'DiffviewFileHistory %'
   end
-end, { desc = 'File [H]istory (current file)' })
--- Gitsigns binds are set buffer-locally in gitsigns on_attach above
+end, { desc = 'File history (current file)' })
 
--- ── h → Harpoon ───────────────────────────────────────────
-local function harpoon_map(keys, fn, desc) vim.keymap.set('n', keys, fn, { desc = desc }) end
+-- ── Harpoon ──────────────────────────────────────────────────
+local function harpoon_redraw() vim.cmd 'redrawstatus' end
 
-harpoon_map('<leader>ha', function() require('harpoon'):list():add() end, 'Add file')
-harpoon_map('<leader>hh', function()
-  local h = require 'harpoon'
-  h.ui:toggle_quick_menu(h:list())
-end, 'Menu')
-harpoon_map('<leader>hn', function() require('harpoon'):list():next() end, 'Next mark')
-harpoon_map('<leader>hp', function() require('harpoon'):list():prev() end, 'Prev mark')
-harpoon_map('<leader>h1', function() require('harpoon'):list():select(1) end, 'Jump to mark 1')
-harpoon_map('<leader>h2', function() require('harpoon'):list():select(2) end, 'Jump to mark 2')
-harpoon_map('<leader>h3', function() require('harpoon'):list():select(3) end, 'Jump to mark 3')
-harpoon_map('<leader>h4', function() require('harpoon'):list():select(4) end, 'Jump to mark 4')
+vim.keymap.set('n', '<leader>ha', function()
+  local harpoon = require 'harpoon'
+  harpoon:list():add()
+  harpoon_redraw()
+end, { desc = 'Harpoon add file' })
 
--- ── k → Marks ───────────────────────────────────────────
-vim.keymap.set('n', '<leader>kl', '<cmd>marks<cr>', { desc = 'List marks' })
-vim.keymap.set('n', '<leader>kc', '<cmd>delmarks!<cr>', { desc = 'Clear local marks' })
-vim.keymap.set('n', '<leader>kC', '<cmd>delmarks A-Z<cr>', { desc = 'Clear global marks' })
+vim.keymap.set('n', '<leader>hd', function()
+  local harpoon = require 'harpoon'
+  harpoon:list():remove()
+  harpoon_redraw()
+end, { desc = 'Harpoon delete current file' })
 
--- ── n → notes ───────────────────────────────────────────
+vim.keymap.set('n', '<leader>hD', function()
+  local harpoon = require 'harpoon'
+  harpoon:list():clear()
+  harpoon_redraw()
+end, { desc = 'Harpoon delete all files' })
+
+for i = 1, 4 do
+  vim.keymap.set('n', '<leader>' .. i, function() require('harpoon'):list():select(i) end, { desc = 'Harpoon jump to ' .. i })
+end
+
+-- ── Project notes ────────────────────────────────────────────
 local TODO_FILENAME = '.todo.md'
 
 local function toggle_todo()
-  -- Close it if already open
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
     local name = vim.api.nvim_buf_get_name(buf)
@@ -1052,56 +1091,20 @@ local function toggle_todo()
     end
   end
 
-  -- Find project root
   local root = vim.fs.root(0, { '.git' }) or vim.fn.getcwd()
   local todo = root .. '/' .. TODO_FILENAME
 
-  -- Create file if missing
   if vim.fn.filereadable(todo) == 0 then vim.fn.writefile({}, todo) end
 
   vim.cmd 'vsplit'
   vim.cmd('edit ' .. vim.fn.fnameescape(todo))
 end
 
-vim.keymap.set('n', '<leader>n', toggle_todo, {
-  desc = 'Toggle project todo',
-})
+vim.keymap.set('n', '<leader>N', toggle_todo, { desc = 'Toggle project todo' })
 
--- ── m → Markdown ───────────────────────────────────────────
-vim.keymap.set('n', '<leader>mt', function() vim.cmd 'RenderMarkdown toggle' end, { desc = 'Toggle render' })
-vim.keymap.set('n', '<leader>mc', function()
-  local line = vim.api.nvim_get_current_line()
-  local new_line
-  if line:match '^%s*- %[x%]' then
-    new_line = line:gsub('%[x%]', '[ ]', 1)
-  elseif line:match '^%s*- %[ %]' then
-    new_line = line:gsub('%[ %]', '[x]', 1)
-  end
-  if new_line then vim.api.nvim_set_current_line(new_line) end
-end, { desc = 'Toggle checkbox' })
+-- ── Diagnostics ──────────────────────────────────────────────
+vim.keymap.set('n', '<leader>D', function() vim.diagnostic.setloclist { open = true } end, { desc = 'Open diagnostic list' })
 
--- ── u → Undotree ─────────────────────────────
-vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle)
-vim.g.undotree_SetFocusWhenToggle = 1
-
--- ── x → Diagnostics / Trouble ─────────────────────────────
-vim.keymap.set('n', '<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', { desc = 'Workspace diagnostics' })
-vim.keymap.set('n', '<leader>xb', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', { desc = 'Buffer diagnostics' })
-vim.keymap.set('n', '<leader>xq', '<cmd>Trouble quickfix toggle<cr>', { desc = 'Quickfix list' })
-vim.keymap.set('n', '<leader>xd', function() snacks.picker.diagnostics() end, { desc = 'Diagnostics picker' })
-
--- ── Disable tabline (bufferline handles this) ─────────────
-vim.opt.showtabline = 2
-
--- ── Tab management ──────────────────────────────────────────
-vim.keymap.set('n', '<leader><tab>n', '<cmd>tabnew<cr>', { desc = 'New tab' })
-vim.keymap.set('n', '<leader><tab>z', '<cmd>tab split<cr>', { desc = 'Zoom tab' })
-vim.keymap.set('n', '<leader><tab>]', '<cmd>tabnext<cr>', { desc = 'Next tab' })
-vim.keymap.set('n', '<leader><tab>[', '<cmd>tabprev<cr>', { desc = 'Prev tab' })
-vim.keymap.set('n', '<leader><tab>c', '<cmd>tabclose<cr>', { desc = 'Close tab' })
-
--- Buffer cleanup
-vim.keymap.set('n', '<leader>ba', '<cmd>%bd<cr>', { desc = 'Close all buffers' })
-vim.keymap.set('n', '<leader>bo', '<cmd>%bd|e#|bd#<cr>', { desc = 'Close other buffers' })
-
--- vim: ts=2 sts=2 sw=2 et
+-- quick move left/right in insert mode
+vim.keymap.set('i', '<C-h>', '<Left>', { desc = 'Move cursor left' })
+vim.keymap.set('i', '<C-l>', '<Right>', { desc = 'Move cursor right' })

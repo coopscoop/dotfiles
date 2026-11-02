@@ -40,20 +40,11 @@ export NVM_DIR="$HOME/.nvm"
 alias ll="ls -la"
 alias vim="nvim"
 alias tkill="tmux kill-server"
-alias qwen="llama-server \
-  -m ~/models/qwen3.5/Qwen3.5-9B-IQ4_XS-MTP.gguf \
-  -ngl 99 \
-  -c 24576 \
-  -fa on \
-  -np 1 \
-  --spec-type draft-mtp \
-  --spec-draft-n-max 3 \
-  --reasoning off"
 
 # # ── On Boot Check For Tmux ─────────────────────────────────────────────────────────────────
-# if [ -z "$TMUX" ]; then
-#   tmux new-session -A -s main
-# fi
+if [ -z "$TMUX" ]; then
+  tmux new-session -A -s main
+fi
 
 # ── Shell Init ─────────────────────────────────────────────────────────────────
 eval "$(fzf --zsh)"

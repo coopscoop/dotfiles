@@ -2,8 +2,12 @@
 shell-integration = zsh
 
 # font
-font-family = JetBrainsMono Nerd Font
+font-family = ""
+font-family = JetBrains Mono
+font-family = Symbols Nerd Font Mono
 font-size = 10
+
+font-codepoint-map = U+E000-U+F1AF0=Symbols Nerd Font Mono
 
 # window stuff
 background-opacity = 0.9
